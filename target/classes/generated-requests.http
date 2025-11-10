@@ -1,0 +1,41 @@
+### findAll
+GET http://localhost:8080/api/products
+
+### findById
+GET http://localhost:8080/api/products/1
+
+### findByName
+GET http://localhost:8080/api/products/search/by-name/Bookshelf
+
+### findByNameContaining
+GET http://localhost:8080/api/products/search/by-name-containing/a
+
+### findByCategory
+GET http://localhost:8080/api/products/search/by-category/Furniture
+
+### findByPriceGreaterThan
+GET http://localhost:8080/api/products/search/price-greater-than/200
+
+### findByPriceLessThan
+GET http://localhost:8080/api/products/search/price-less-than/200
+
+### findByStockGreaterThan
+GET http://localhost:8080/api/products/search/stock-greater-than/15
+
+### findByCategoryAndPriceLessThan
+GET http://localhost:8080/api/products/search/stock-less-than/Furniture/200
+
+### save
+POST http://localhost:8080/api/products
+Content-Type: application/json
+
+{
+  "name": "{{$random.superhero.name}}",
+  "description": "{{$random.superhero.descriptor}}",
+  "price": 100,
+  "category": "{{$random.superhero.power}}",
+  "stock": 10
+}
+
+### deleteProduct
+DELETE http://localhost:8080/api/products/10

@@ -1,0 +1,9 @@
+com/example/csv/core/CsvRepositoryFactory$SimpleRepositoryMetadata.class
+com/example/csv/core/CsvRepositoryFactory.class
+com/example/csv/annotation/CsvFile.class
+com/example/csv/annotation/CsvEntity.class
+com/example/csv/annotation/EnableCsvRepositories.class
+com/example/csv/core/CsvRepositoryInvocationHandler.class
+com/example/csv/repository/CsvRepository.class
+com/example/csv/core/CsvDataAccess.class
+com/example/csv/config/CsvRepositoryAutoConfiguration.class
