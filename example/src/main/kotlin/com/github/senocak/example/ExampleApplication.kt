@@ -24,22 +24,22 @@ fun main(args: Array<String>) {
 
 @CsvEntity
 data class Product(
-    @JsonProperty("id")
+    @JsonProperty(value = "id")
     var id: Long,
 
-    @JsonProperty("name")
+    @JsonProperty(value = "name")
     var name: String,
 
-    @JsonProperty("description")
+    @JsonProperty(value = "description")
     var description: String,
 
-    @JsonProperty("price")
+    @JsonProperty(value = "price")
     var price: Double,
 
-    @JsonProperty("category")
+    @JsonProperty(value = "category")
     var category: String,
 
-    @JsonProperty("stock")
+    @JsonProperty(value = "stock")
     var stock: Int
 )
 
@@ -100,7 +100,8 @@ class ExampleApplication(private val productRepository: ProductRepository) {
 
     @PostMapping
     @ResponseStatus(value = HttpStatus.CREATED)
-    fun save(@RequestBody product: Product): Product? = productRepository.save(product)
+    fun save(@RequestBody product: Product): Product = productRepository.save(product)
+    // TODO: save is not saving to CSV file. Needs to be fixed.
 
     @DeleteMapping("/{id}")
     fun deleteProduct(@PathVariable(value = "id") id: Long) {
