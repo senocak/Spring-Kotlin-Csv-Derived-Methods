@@ -30,6 +30,7 @@ POST http://localhost:8080/api/products
 Content-Type: application/json
 
 {
+  "id": 9,
   "name": "{{$random.superhero.name}}",
   "description": "{{$random.superhero.descriptor}}",
   "price": 100,
@@ -38,4 +39,4 @@ Content-Type: application/json
 }
 
 ### deleteProduct
-DELETE http://localhost:8080/api/products/10
+DELETE http://localhost:8080/api/products/9

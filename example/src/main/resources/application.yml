@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: spring-data-csv-example
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com:
+      example:
+        csv: DEBUG
+    org:
+      springframework:
+        data: DEBUG
