@@ -4,6 +4,52 @@ A Spring Boot starter that lets you use a Spring Data-style repository interface
 
 The core module scans repository interfaces annotated with `@CsvFile`, creates proxy implementations at startup, loads CSV rows into memory for each repository call, applies CRUD or derived-query logic, and writes the full CSV back to disk for save/delete operations.
 
+## The Problem
+
+Many Spring Boot applications need a small amount of structured data, but a database is not always worth the setup cost. Examples include demo applications, admin prototypes, local tools, sample catalogs, feature fixtures, small lookup tables, test data, and file-backed utilities where the data must stay human-readable.
+
+Without this library, that usually means writing the same boilerplate repeatedly:
+
+- Open a CSV file from resources or disk
+- Parse rows into objects
+- Search and filter those rows manually
+- Append, delete, or rewrite rows for simple persistence
+- Keep controller and service code clean without adding database infrastructure
+
+This project solves that by putting a repository layer in front of CSV files. Application code can depend on a familiar Spring Data-style interface instead of file parsing code.
+
+The library is useful when you want file-backed persistence with a repository API, but you do not need a full database engine.
+
+It gives you:
+
+- A simple way to package initial CSV data with the application
+- Repository methods for reading, saving, and deleting rows
+- Derived query methods so callers can write `findByCategory(...)` instead of manual filters
+- A predictable runtime write model for packaged resources
+- CSV files that remain easy to inspect, edit, commit, or replace
+
+The classpath write behavior is especially important. Files under `src/main/resources` are copied to `target/classes` during development and can be packaged inside a JAR in production. Those locations should not be treated as mutable storage. For that reason, `classpath:` CSV files are used as seed data. Once the application writes data, the library creates a filesystem copy under the JVM working directory and reads from that copy afterward.
+
+## When To Use It
+
+Use this library for small datasets where simplicity and readability matter more than database features.
+
+Good fits:
+
+- Demo and sample applications
+- Local tools
+- Small catalogs or lookup tables
+- Test fixtures and seed data
+- Prototypes that may later move to a database
+
+Poor fits:
+
+- Large CSV files
+- Concurrent writes from multiple processes
+- Transactional workflows
+- Complex querying, sorting, paging, or joins
+- Data that needs database-level consistency guarantees
+
 ## Features
 
 - **Spring Data-style repositories**: Define interfaces extending `CsvRepository<T, ID>`
@@ -15,6 +61,7 @@ The core module scans repository interfaces annotated with `@CsvFile`, creates p
 
 ## Usage
 
+### Add Dependency
 Install or publish the core module as:
 
 ```xml
@@ -25,15 +72,14 @@ Install or publish the core module as:
 </dependency>
 ```
 
-## Quick Start
-
-### 1. Create Entity
-
-Create a POJO and annotate it with `@CsvEntity`. CSV headers should match the entity property names.
+### Create Entity and Repository
+Create a POJO and annotate it with `@CsvEntity`. CSV headers should match the entity property names. Create a repository interface extending `CsvRepository` and annotate it with `@CsvFile`.
 
 ```kotlin
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.senocak.csv.core.annotation.CsvEntity
+import com.github.senocak.csv.core.annotation.CsvFile
+import com.github.senocak.csv.core.repository.CsvRepository
 
 @CsvEntity
 data class Product(
@@ -44,29 +90,20 @@ data class Product(
     @JsonProperty("price")
     var price: Double
 )
-```
 
-### 2. Create Repository
-
-Create a repository interface extending `CsvRepository` and annotate it with `@CsvFile`.
-
-```java
-import com.github.senocak.csv.core.annotation.CsvFile;
-import com.github.senocak.csv.core.repository.CsvRepository;
-
-import java.util.List;
-import java.util.Optional;
-
-@CsvFile(path = "classpath:users.csv")
-public interface UserRepository extends CsvRepository<User, Long> {
-    List<User> findByName(String name);
-    Optional<User> findByEmail(String email);
-    List<User> findByNameAndAgeGreaterThan(String name, Integer age);
+@CsvFile(path = "classpath:products.csv")
+interface ProductRepository : CsvRepository<Product, Long> {
+    fun findByName(name: String): MutableList<Product>
+    fun findByNameContaining(name: String): MutableList<Product>
+    fun findByCategory(category: String): MutableList<Product>
+    fun findByPriceGreaterThan(price: Double): MutableList<Product>
+    fun findByPriceLessThan(price: Double): MutableList<Product>
+    fun findByStockGreaterThan(stock: Int): MutableList<Product>
+    fun findByCategoryAndPriceLessThan(category: String, price: Double): MutableList<Product>
 }
 ```
 
-### 3. Enable CSV Repositories
-
+### Enable CSV Repositories
 Enable repository scanning in your Spring Boot application.
 
 ```java
@@ -85,50 +122,26 @@ public class Application {
 
 If `basePackages` is not set, scanning starts from the package of the class annotated with `@EnableCsvRepositories`.
 
-### 4. Add CSV Data
-
+### Add CSV Data
 For a classpath CSV, place the file under `src/main/resources`.
 
 ```csv
-id,name,age,email
-1,John Doe,30,john@example.com
-2,Jane Smith,25,jane@example.com
-```
-
-### 5. Use Repository
-
-```java
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-
-@Service
-public class UserService {
-    private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public void example() {
-        Iterable<User> allUsers = userRepository.findAll();
-
-        List<User> usersNamedJohn = userRepository.findByName("John");
-
-        User newUser = new User();
-        newUser.setId(3L);
-        newUser.setName("Jane");
-        newUser.setAge(30);
-        newUser.setEmail("jane.new@example.com");
-        userRepository.save(newUser);
-
-        userRepository.deleteById(1L);
-    }
-}
+category,description,id,name,price,stock
+Electronics,"High-performance laptop",1,Laptop,999.99,50
+Electronics,"Latest smartphone model",2,Smartphone,699.99,100
+Furniture,"Ergonomic office chair",3,"Desk Chair",299.99,30
+Electronics,"Bluetooth wireless mouse",4,"Wireless Mouse",29.99,200
+Furniture,"Adjustable standing desk",5,"Standing Desk",599.99,20
+Electronics,"27-inch 4K monitor",6,Monitor,449.99,40
+Electronics,"Mechanical keyboard",7,Keyboard,129.99,75
+Furniture,"5-shelf bookcase",8,Bookshelf,199.99,15
+"Energy Resistance",Songbird,9,"Hercules Dragon",100.0,10
+"Enhanced Smell",Songbird,9,"Ultra Thanos Strike",100.0,10
+Absorption,Bushido,9,"Dark Shatterstar",100.0,10
+"Elemental Transmogrification",Daredevil,9,"Giant Abomination Lord",100.0,10
 ```
 
 ## How It Works
-
 At startup, `@EnableCsvRepositories` imports the auto-configuration that scans for interfaces annotated with `@CsvFile`. For each repository interface, the library resolves the entity type and ID type from `CsvRepository<T, ID>`, then registers a proxy bean.
 
 When a repository method is called:
@@ -141,7 +154,6 @@ When a repository method is called:
 This design keeps the library small and predictable. It is best suited for small configuration datasets, demos, fixtures, prototypes, and simple file-backed applications.
 
 ## Path Configuration
-
 The `@CsvFile` annotation supports three path styles.
 
 ```java
@@ -151,7 +163,6 @@ The `@CsvFile` annotation supports three path styles.
 ```
 
 ### Classpath Paths
-
 `classpath:` paths are treated as seed data.
 
 For `@CsvFile(path = "classpath:users.csv")`:
@@ -199,7 +210,6 @@ Absolute paths are used directly:
 For mutable application data, a filesystem path is usually clearer than `classpath:` because reads and writes always target the same visible file from the first call.
 
 ## Supported Repository Operations
-
 `CsvRepository<T, ID>` provides:
 
 - `save(entity)`: appends the entity to the loaded rows and rewrites the CSV
@@ -216,7 +226,6 @@ The ID lookup checks common field names: `id`, `Id`, `ID`, and `_id`.
 `save` does not currently perform an upsert by ID. If you save another entity with the same ID, it is appended as another row.
 
 ## Supported Derived Queries
-
 Derived methods are supported when the method name starts with `find`, `get`, or `read`.
 
 Supported comparisons include:
@@ -235,7 +244,6 @@ Supported return types include:
 - `boolean` or `Boolean` for whether any row matched
 
 ## CSV File Format
-
 The CSV file must include a header row. Header names should match entity fields or Jackson property names.
 
 ```csv
@@ -247,7 +255,6 @@ id,name,age,email
 Writes use Jackson's schema for the entity class and include a header row.
 
 ## Limitations
-
 - All rows are loaded into memory on each repository call.
 - Save and delete operations rewrite the whole CSV file.
 - Writes are not transactional and no file locking is implemented.
