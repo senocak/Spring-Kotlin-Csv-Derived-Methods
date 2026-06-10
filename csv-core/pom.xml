@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.senocak</groupId>
-    <artifactId>csv-core</artifactId>
+    <artifactId>spring-data-csv</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -111,4 +111,3 @@
         </plugins>
     </build>
 </project>
-

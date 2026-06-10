@@ -26,7 +26,7 @@ data class Product(
     var stock: Int
 )
 
-@CsvFile(path = "classpath:products.csv")
+@CsvFile(path = "classpath:products.csv") // TODO: Make it configurable like SpEL
 interface ProductRepository : CsvRepository<Product, Long> {
     fun findByName(name: String): MutableList<Product>
     fun findByNameContaining(name: String): MutableList<Product>

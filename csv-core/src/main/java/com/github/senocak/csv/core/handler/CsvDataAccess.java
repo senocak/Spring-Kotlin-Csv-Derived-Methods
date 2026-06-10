@@ -21,6 +21,8 @@ import java.util.List;
  * Utility class for reading and writing CSV files.
  */
 public class CsvDataAccess {
+    private CsvDataAccess() {}
+
     private static final Logger log = LoggerFactory.getLogger(CsvDataAccess.class);
     private static final CsvMapper csvMapper = new CsvMapper();
 
@@ -57,18 +59,11 @@ public class CsvDataAccess {
      * @param <T>        The entity type
      * @throws IOException if the file cannot be written
      */
-    @SuppressWarnings("unchecked")
     public static <T> void saveAll(final String csvPath, final @NonNull List<?> entities, final Class<?> entityClass) throws IOException {
-        if (entities.isEmpty()) {
-            return;
-        }
         final CsvSchema schema = csvMapper.schemaFor((Class<?>) entityClass).withHeader();
-        File file = getFile(csvPath);
+        final File file = getFile(csvPath);
 
-        // Ensure parent directory exists
-        if (file.getParentFile() != null) {
-            file.getParentFile().mkdirs();
-        }
+        ensureParentDirectoryExists(file);
 
         csvMapper.writer(schema).writeValue(file, entities);
     }
@@ -78,7 +73,11 @@ public class CsvDataAccess {
      */
     private static <T> MappingIterator<T> createIterator(final @NonNull String csvPath, final Class<T> entityClass, final CsvSchema schema) throws IOException {
         if (csvPath.startsWith("classpath:")) {
-            final String resourcePath = csvPath.substring("classpath:".length());
+            final File writableFile = getFile(csvPath);
+            if (writableFile.exists()) {
+                return csvMapper.readerFor(entityClass).with(schema).readValues(writableFile);
+            }
+            final String resourcePath = getClasspathResourcePath(csvPath);
             final Resource resource = new ClassPathResource(resourcePath);
             final InputStream inputStream = resource.getInputStream();
             return csvMapper.readerFor(entityClass).with(schema).readValues(inputStream);
@@ -86,7 +85,7 @@ public class CsvDataAccess {
         final File file = getFile(csvPath);
         if (!file.exists()) {
             // Create empty file if it doesn't exist
-            file.getParentFile().mkdirs();
+            ensureParentDirectoryExists(file);
             final boolean newFile = file.createNewFile();
             log.info("Creating new file {}", newFile);
         }
@@ -99,11 +98,7 @@ public class CsvDataAccess {
      */
     private static File getFile(final @NonNull String csvPath) {
         if (csvPath.startsWith("classpath:")) {
-            // For classpath resources, we need to write to a filesystem location
-            // Default to writing to the current directory or a temp location
-            final String resourcePath = csvPath.substring("classpath:".length());
-            final String fileName = Paths.get(resourcePath).getFileName().toString();
-            return new File(System.getProperty("user.dir"), fileName);
+            return new File(System.getProperty("user.dir"), getClasspathResourcePath(csvPath));
         }
         final Path path = Paths.get(csvPath);
         if (path.isAbsolute()) {
@@ -119,10 +114,24 @@ public class CsvDataAccess {
     @NonNull
     public static String getWritablePath(final @NonNull String csvPath) {
         if (csvPath.startsWith("classpath:")) {
-            final String resourcePath = csvPath.substring("classpath:".length());
-            final String fileName = Paths.get(resourcePath).getFileName().toString();
-            return new File(System.getProperty("user.dir"), fileName).getAbsolutePath();
+            return getFile(csvPath).getAbsolutePath();
         }
         return csvPath;
+    }
+
+    @NonNull
+    private static String getClasspathResourcePath(final @NonNull String csvPath) {
+        String resourcePath = csvPath.substring("classpath:".length());
+        while (resourcePath.startsWith("/")) {
+            resourcePath = resourcePath.substring(1);
+        }
+        return resourcePath;
+    }
+
+    private static void ensureParentDirectoryExists(final @NonNull File file) throws IOException {
+        final File parentFile = file.getParentFile();
+        if (parentFile != null && !parentFile.exists() && !parentFile.mkdirs() && !parentFile.exists()) {
+            throw new IOException("Could not create directory: " + parentFile);
+        }
     }
 }

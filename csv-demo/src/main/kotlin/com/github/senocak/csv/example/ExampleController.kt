@@ -58,7 +58,6 @@ class ExampleController(private val productRepository: ProductRepository) {
     @ResponseStatus(value = HttpStatus.CREATED)
     fun save(@RequestBody product: Product): Product =
         productRepository.save(product)
-    // TODO: save is not saving to CSV file. Needs to be fixed.
 
     @DeleteMapping("/{id}")
     fun deleteProduct(@PathVariable id: Long) {
