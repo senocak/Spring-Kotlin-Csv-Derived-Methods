@@ -4,12 +4,3 @@ spring:
 
 server:
   port: 8080
-
-logging:
-  level:
-    com:
-      example:
-        csv: DEBUG
-    org:
-      springframework:
-        data: DEBUG
