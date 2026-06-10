@@ -1,9 +1,0 @@
-category,description,id,name,price,stock
-Electronics,"High-performance laptop",1,Laptop,999.99,50
-Electronics,"Latest smartphone model",2,Smartphone,699.99,100
-Furniture,"Ergonomic office chair",3,"Desk Chair",299.99,30
-Electronics,"Bluetooth wireless mouse",4,"Wireless Mouse",29.99,200
-Furniture,"Adjustable standing desk",5,"Standing Desk",599.99,20
-Electronics,"27-inch 4K monitor",6,Monitor,449.99,40
-Electronics,"Mechanical keyboard",7,Keyboard,129.99,75
-Furniture,"5-shelf bookcase",8,Bookshelf,199.99,15

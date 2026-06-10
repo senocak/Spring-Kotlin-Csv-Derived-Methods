@@ -1,0 +1,9 @@
+id,name,description,price,category,stock
+1,Laptopxs,High-performance laptop,999.99,Electronics,50
+2,Smartphone,Latest smartphone model,699.99,Electronics,100
+3,Desk Chair,Ergonomic office chair,299.99,Furniture,30
+4,Wireless Mouse,Bluetooth wireless mouse,29.99,Electronics,200
+5,Standing Desk,Adjustable standing desk,599.99,Furniture,20
+6,Monitor,27-inch 4K monitor,449.99,Electronics,40
+7,Keyboard,Mechanical keyboard,129.99,Electronics,75
+8,Bookshelf,5-shelf bookcase,199.99,Furniture,15
